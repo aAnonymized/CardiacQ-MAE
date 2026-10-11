@@ -1,0 +1,16 @@
+# Install torch/torchvision separately for your CUDA version; keep an existing working pair.
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+tqdm
+nibabel
+opencv-python-headless
+SimpleITK
+timm
+iopath
+simplejson
+einops
+omegaconf
+ipykernel

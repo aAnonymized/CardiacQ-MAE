@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/facebookresearch/mae_st",
+  "revision": "1e6b68ab4a1e5f483c6ac736b145e02f6c572402",
+  "sha256": {
+    "models_mae.py": "2029fd144377d0821a6f9fd2a3139df82f2d7539937accf27a295098117229fa",
+    "util/video_vit.py": "b1eb030bd2755fe6d50e22b36f178c699ce93723c785e6954f419708bb2ae408",
+    "util/logging.py": "100d7209a2c8006ce4f956c888c3580271af509a04146eea4ad6c52f02e1de9f",
+    "LICENSE": "517acfe79046fca3d989a5a6f8b55b8c3919bb442609bd9ed0e81af6e25deb3a",
+    "README.md": "323c3c7d4a5e0c815b2e71b225920006037ae8f433a6b942a1ce7d7ebcaa314a"
+  }
+}
