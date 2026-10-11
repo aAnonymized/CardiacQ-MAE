@@ -56,27 +56,6 @@ python run_pretrain.py --settings paths.json --source private --resume
 }
 ```
 
-## Private Raw Data
-
-`private_train_csv` and `private_test_csv` require `sax_path,disease`; optional
-columns are `patient_id` and `ed_index` (explicitly zero-based). Relative paths
-resolve under `private_root`. NIfTI storage must be native `X,Y,Z,T`.
-
-The original private preprocessing is unchanged: select original Z center +
-`[-2,0,2]`, preserve native XY and full field of view, resize/pad using physical
-aspect ratio, normalize selected slices at percentiles 1/99, and periodically
-interpolate to 16 frames. Cache storage is FP32 `[3,16,224,224]`.
-
-Without a previous manifest, the original class-stratified 20% validation rule
-and `split_seed=0` are used. Set `private_previous_manifest` to the old manifest
-only when you need identical historical patient membership; it is not required
-for a new experiment. Existing `patients.csv` preserves the chosen split. To
-change it deliberately, run `prepare_data(..., overwrite=True)`; valid image
-caches remain reusable. Failed cases are listed in `native_prepare_report.csv`.
-
-Private pretraining uses **train only**. Private validation/test patients do
-not enter training. NOR remains in pretraining, as in the supplied notebook.
-
 ## Public Raw Data
 
 Set the three `public_raw_roots` explicitly, or let `public_raw_root` discover
@@ -120,56 +99,3 @@ splits are saved only as provenance. No classification subset determines this po
 images and is therefore transductive, not an unseen-test/inductive evaluation.
 Report this exposure explicitly. Public snapshot/monitor images also belong to
 the training pool; their reconstruction metrics are not held-out validation.
-
-## Unchanged Numerical Recipe
-
-- Pretraining: 400 epochs, batch 32, accumulation 1, LR `1e-4`, warmup 10,
-  cosine schedule, minimum LR `1e-6`, AdamW decay `0.05`, betas `(0.9,0.95)`,
-  gradient clipping `1.0`; FP32, AMP/TF32 off, no per-epoch validation.
-- Encoder: 768 dimensions / 12 layers / 12 heads; 16 frames, tubelet 4,
-  patch 16, mask ratio `0.75`, raw-intensity reconstruction.
-- Shared decoder: 512 dimensions / 8 layers / 16 heads. Query fraction `0.10`,
-  top share `0.70`, chunk size 2048; latest 34-query sparse-path implementation.
-- cineQ losses: reconstruction + DIS + DPCC; DIS weight `1.0`, Jacobian weight
-  `0.1` inside DIS, DPCC weight `0.2`. TGWR uses `M` without baseline, alpha `1.0`.
-- Input augmentation: horizontal flip `0.5`, intensity jitter `0.1`.
-- Snapshots: every 50 epochs, up to 25 fixed patients, gain 2.5, maps 896 pixels.
-  Reconstruction and motion snapshots remain enabled. To intentionally disable
-  their separate registration/visualization cost set `snapshots.enabled=False`.
-
-Model, loss, optimizer, motion-provider and visualization kernels are reused
-from the latest historical implementation. VideoMAE/HeartMAE/TrackMAE are the
-existing controlled CMR adaptations on the common MAE-ST backbone, **not full
-reproductions of each original paper's training recipe**.
-
-## Outputs and Resume
-
-```text
-OUTPUT_ROOT/RUN_NAME/
-  settings_latest.json
-  data_protocol.json
-  pretrain_patients.csv
-  patient_counts.csv
-  pretrain_results.csv
-  pretrain/METHOD/seed0/
-    last.pt                       # full model + optimizer/scaler/RNG/history
-    encoder_last.pt
-    history.csv
-    summary.json
-    epoch0050.pt                  # periodic full model
-    snapshots/epoch0050/...
-```
-
-`last.pt` retains the usual `settings,model,method,seed,epoch` keys for later
-downstream loading. `resume=True` loads the actual checkpoint directly, with
-ordinary strict tensor-shape loading but no settings/cache/code-signature gate.
-Keep source, architecture, cohort and recipe unchanged for a scientifically
-meaningful continuation. `resume=False` will not overwrite an existing checkpoint.
-Use different run names for private/public experiments. The old outputs are not
-edited by this package.
-
-## Checks
-
-`python -m unittest discover -s tests -v` covers configuration retention,
-source/patient selection, scanners, cache generation and orchestration using
-small fixtures/mocks. It does not replace a real CUDA/data training run.
