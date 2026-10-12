@@ -1,4 +1,4 @@
-# cineQMAE: Raw Data Preparation and Pretraining
+# CardiacQMAE: Raw Data Preparation and Pretraining
 
 This package contains only raw private/public CMR preparation and pretraining.
 It does not need the old QCD-MAE project, V5 output folder, downstream training
